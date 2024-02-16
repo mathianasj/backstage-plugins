@@ -199,7 +199,7 @@ export class AapResourceEntityProvider implements EntityProvider {
   }
 
   private buildApiEntityFromJob(job: Job): ResourceEntity {
-    const templateDetailsUrl = `${this.baseUrl}/#/templates/${job.id}/${job.id}/details`;
+    const jobDetailsUrl = `${this.baseUrl}/#/jobs/workflow/${job.id}/output`;
     
     return {
       kind: 'Resource',
@@ -212,7 +212,8 @@ export class AapResourceEntityProvider implements EntityProvider {
         name: `${job.name}`,
         links: [
           {
-            url: `${job.url}`
+            url: `${jobDetailsUrl}`,
+            title: "Job Details"
           }
         ]
       },
