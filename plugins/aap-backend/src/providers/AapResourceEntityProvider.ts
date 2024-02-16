@@ -15,9 +15,10 @@ import { Logger } from 'winston';
 
 import {
   listJobTemplates,
+  listJobs,
   listWorkflowJobTemplates,
 } from '../clients/AapResourceConnector';
-import { JobTemplate } from '../clients/types';
+import { Job, JobTemplate } from '../clients/types';
 import { readAapApiEntityConfigs } from './config';
 import { AapConfig } from './types';
 
@@ -156,6 +157,36 @@ export class AapResourceEntityProvider implements EntityProvider {
       this.logger.debug(`Discovered ResourceEntity "${template.name}"`);
     }
 
+    const jobsData = await Promise.allSettled([
+      listJobs(this.baseUrl, this.authorization),
+    ]);
+
+    const jobs: Job[] = [];
+
+    jobsData.forEach(results => {
+      if (results.status === 'fulfilled') {
+        jobs.push(...results.value);
+      } else if (results.status === 'rejected') {
+        // Ensure that we don't log any sensitive internal data:
+        const error = results.reason || {};
+        this.logger.error('Failed to fetch AAP job templates', {
+          // Default Error properties:
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+          // Additional status code if available:
+          status: error.response?.status,
+        });
+      }
+    });
+
+    for (const job of jobs) {
+      const resourceEntity: ResourceEntity =
+        this.buildApiEntityFromJob(job);
+      entities.push(resourceEntity);
+      this.logger.debug(`Discovered ResourceEntity "${job.name}"`);
+    }
+
     this.logger.info(`Applying the mutation with ${entities.length} entities`);
 
     await this.connection.applyMutation({
@@ -165,6 +196,32 @@ export class AapResourceEntityProvider implements EntityProvider {
         locationKey: this.getProviderName(),
       })),
     });
+  }
+
+  private buildApiEntityFromJob(job: Job): ResourceEntity {
+    const templateDetailsUrl = `${this.baseUrl}/#/templates/${job.id}/${job.id}/details`;
+    
+    return {
+      kind: 'Resource',
+      apiVersion: 'backstage.io/v1alpha1',
+      metadata: {
+        annotations: {
+          [ANNOTATION_LOCATION]: this.getProviderName(),
+          [ANNOTATION_ORIGIN_LOCATION]: this.getProviderName(),
+        },
+        name: `${job.name}`,
+        links: [
+          {
+            url: `${job.url}`
+          }
+        ]
+      },
+      spec: {
+        type: `AnsibleJob`,
+        owner: `${this.owner}`,
+        ...(this.system && { system: `${this.system}` }),
+      },
+    }
   }
 
   private buildApiEntityFromJobTemplate(template: JobTemplate): ResourceEntity {

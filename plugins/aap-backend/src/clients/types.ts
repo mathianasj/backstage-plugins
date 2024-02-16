@@ -7,4 +7,12 @@ export type JobTemplate = {
   [key: string]: any;
 };
 
+export type Jobs = any[];
+
+export type Job = {
+  id: number;
+  url: string;
+  name: string;
+}
+
 export type JobTemplates = any[];
