@@ -14,8 +14,8 @@ import {
 import { Logger } from 'winston';
 
 import {
-  listJobTemplates,
   listJobs,
+  listJobTemplates,
   listWorkflowJobTemplates,
 } from '../clients/AapResourceConnector';
 import { Job, JobTemplate } from '../clients/types';
@@ -181,8 +181,7 @@ export class AapResourceEntityProvider implements EntityProvider {
     });
 
     for (const job of jobs) {
-      const resourceEntity: ResourceEntity =
-        this.buildApiEntityFromJob(job);
+      const resourceEntity: ResourceEntity = this.buildApiEntityFromJob(job);
       entities.push(resourceEntity);
       this.logger.debug(`Discovered ResourceEntity "${job.name}"`);
     }
@@ -200,7 +199,7 @@ export class AapResourceEntityProvider implements EntityProvider {
 
   private buildApiEntityFromJob(job: Job): ResourceEntity {
     const jobDetailsUrl = `${this.baseUrl}/#/jobs/workflow/${job.id}/output`;
-    
+
     return {
       kind: 'Resource',
       apiVersion: 'backstage.io/v1alpha1',
@@ -213,16 +212,16 @@ export class AapResourceEntityProvider implements EntityProvider {
         links: [
           {
             url: `${jobDetailsUrl}`,
-            title: "Job Details"
-          }
-        ]
+            title: 'Job Details',
+          },
+        ],
       },
       spec: {
-        type: `AnsibleJob`,
+        type: `ansible_job`,
         owner: `${this.owner}`,
         ...(this.system && { system: `${this.system}` }),
       },
-    }
+    };
   }
 
   private buildApiEntityFromJobTemplate(template: JobTemplate): ResourceEntity {

@@ -1,0 +1,19 @@
+dynamicPlugins:
+  frontend:
+    janus-idp.backstage-plugin-aap:
+      apiFactories: []
+      appIcons: []
+      dynamicRoutes: []
+      mountPoints:
+        - mountPoint: entity.page.topology/cards
+          importName: AapPage
+          config:
+            layout:
+              gridColumn: '1 / -1'
+              height: 75vh
+            if:
+              anyOf:
+                - isAnsibleJob
+      routeBindings: []
+aap:
+  baseUrl: ${AAP_BASE_URL}
